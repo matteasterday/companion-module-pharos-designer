@@ -291,7 +291,7 @@ class PharosInstance extends InstanceBase {
 			values[`remote_device_${num}_type`] = dev.type
 		}
 		values['beacon'] = this.state.beacon ? 'On' : 'Off'
-		values['ws_connected'] = String(!!this.pharosWs)
+		values['ws_connected'] = 'false'
 		this.setVariableValues(values)
 	}
 
