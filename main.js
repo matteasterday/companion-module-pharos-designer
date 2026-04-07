@@ -41,9 +41,9 @@ class PharosInstance extends InstanceBase {
 			this.pharosWs.destroy()
 			this.pharosWs = null
 		}
-		if (this.controller) {
-			this.controller.logout().catch(() => {})
-		}
+		// Don't logout old controller — it races with the new authenticate()
+		// and can invalidate the new session. The old session times out on its own.
+		this.controller = null
 		this.config = config
 		this.actionData = {
 			groups: [{ id: 0, label: 'No groups found' }],
@@ -179,10 +179,15 @@ class PharosInstance extends InstanceBase {
 					// Start input polling (if configured)
 					this._startInputPolling()
 				} else {
+					const failures = []
+					if (!this.groupsResponse.success) failures.push(`groups: ${this.groupsResponse.error}`)
+					if (!this.scenesResponse.success) failures.push(`scenes: ${this.scenesResponse.error}`)
+					if (!this.timelinesResponse.success) failures.push(`timelines: ${this.timelinesResponse.error}`)
+					if (!this.triggersResponse.success) failures.push(`triggers: ${this.triggersResponse.error}`)
 					if (self.lastStatus != InstanceStatus.UnknownError) {
-						self.updateStatus(InstanceStatus.UnknownError, 'Network error')
+						self.updateStatus(InstanceStatus.UnknownError, 'Data fetch failed')
 						self.lastStatus = InstanceStatus.UnknownError
-						self.log('error', 'Populating the groups/timelines/scenes failed')
+						self.log('error', `Populating data failed: ${failures.join(', ')}`)
 					}
 				}
 			}
