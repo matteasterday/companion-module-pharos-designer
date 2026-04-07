@@ -111,8 +111,10 @@ export class PharosWebSocket {
 			this._handleBeaconBroadcast(msg.data)
 		} else if (msg.broadcast === 'remote_device') {
 			this._handleRemoteDeviceBroadcast(msg.data)
-		} else if (msg.request === 'log') {
+		} else if (msg.request === 'log' || msg.broadcast === 'log') {
 			this._handleLogMessage(msg.data)
+		} else {
+			this.instance.log('debug', `WebSocket unhandled message: ${JSON.stringify(msg).substring(0, 200)}`)
 		}
 	}
 
@@ -221,8 +223,9 @@ export class PharosWebSocket {
 			const typeCode = entry.charCodeAt(0)
 			const levelCode = entry.charCodeAt(1)
 
-			// Filter by configured level
-			if (logLevel === 'warnings' && levelCode > 3) continue
+			// Filter by configured level (API levels: 2=Critical, 3=Terse, 4=Normal, 5=Extended, 6=Verbose, 7=Debug)
+			const maxLevel = { warnings: 3, normal: 4, extended: 5, verbose: 6, debug: 7 }
+			if (levelCode > (maxLevel[logLevel] || 3)) continue
 
 			const category = categoryNames[typeCode] || `Cat${typeCode}`
 			const level = levelNames[levelCode] || `Lvl${levelCode}`
@@ -236,7 +239,8 @@ export class PharosWebSocket {
 			const msgSpaceIdx = timestampAndMsg.indexOf(' ')
 			const message = msgSpaceIdx !== -1 ? timestampAndMsg.substring(msgSpaceIdx + 1) : timestampAndMsg
 
-			const companionLevel = levelCode <= 3 ? 'warn' : 'debug'
+			// Map controller log levels to Companion log levels
+			const companionLevel = levelCode <= 3 ? 'warn' : levelCode <= 4 ? 'info' : 'debug'
 			this.instance.log(companionLevel, `[${category}/${level}] ${message.trim()}`)
 		}
 	}
@@ -364,7 +368,7 @@ export class PharosWebSocket {
 					if (this.destroyed) return
 					this.connect(this.host, this.token)
 				} else {
-					this.instance.log('error', 'WebSocket re-auth failed, retrying...')
+					this.instance.log('error', `WebSocket re-auth failed: ${authRes.error || 'unknown error'}, retrying...`)
 					this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay)
 					this._scheduleReconnect()
 				}

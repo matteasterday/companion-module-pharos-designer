@@ -78,13 +78,20 @@ class PharosInstance extends InstanceBase {
 			this.controller = new DesignerClient(this.config.host)
 			const authRes = await this.controller.authenticate(this.config.user, this.config.password)
 			if (gen !== this._initGeneration) return
-			if (authRes.error) this.log('debug', authRes.error)
 			if (!authRes.success) {
-				if (self.lastStatus != InstanceStatus.UnknownError) {
-					self.updateStatus(InstanceStatus.UnknownError, 'Network error')
-					self.lastStatus = InstanceStatus.UnknownError
-					self.log('error', 'A network error occured while trying to authenticate')
+				const errMsg = authRes.error || 'Unknown error'
+				// Use appropriate status based on error type
+				if (errMsg.includes('Authentification failed') || errMsg.includes('Invalid request')) {
+					self.updateStatus(InstanceStatus.BadConfig, 'Authentication failed')
+					self.log('error', `Authentication failed — check username and password (${errMsg})`)
+				} else if (errMsg.includes('does not match the required pattern')) {
+					self.updateStatus(InstanceStatus.BadConfig, 'Invalid IP address')
+					self.log('error', `Invalid IP address: ${this.config.host}`)
+				} else {
+					self.updateStatus(InstanceStatus.ConnectionFailure, 'Connection failed')
+					self.log('error', `Could not connect to controller: ${errMsg}`)
 				}
+				self.lastStatus = null
 				this.pharosConnected = false
 			} else if (authRes.success) {
 				self.connect_time = Date.now()
@@ -235,7 +242,7 @@ class PharosInstance extends InstanceBase {
 				width: 12,
 				default: true,
 				tooltip:
-					'When enabled, the module maintains a WebSocket connection for real-time button feedback updates. Disable to use HTTP polling instead (for older firmware or limited connections — LPC supports 8, LPC X and VLC support 16).',
+					'Strongly recommended. WebSocket provides real-time feedback — button colors update instantly when timeline/scene/group states change on the controller. Disabling WebSocket means actions still work but all feedback colors and state variables will stop updating. Only disable if you are running out of WebSocket connections on the controller (LPC supports 8, LPC X and VLC/VLC+ support 16 concurrent connections).',
 			},
 			{
 				type: 'dropdown',
@@ -245,11 +252,14 @@ class PharosInstance extends InstanceBase {
 				default: 'off',
 				choices: [
 					{ id: 'off', label: 'Off' },
-					{ id: 'warnings', label: 'Warnings only (Critical + Terse)' },
-					{ id: 'all', label: 'All messages (Debug)' },
+					{ id: 'warnings', label: 'Warnings (Critical + Terse)' },
+					{ id: 'normal', label: 'Normal' },
+					{ id: 'extended', label: 'Extended' },
+					{ id: 'verbose', label: 'Verbose' },
+					{ id: 'debug', label: 'Debug (all messages)' },
 				],
 				tooltip:
-					'Forward controller log messages to the Companion log for this module. Useful for debugging. "All messages" can be very noisy on a busy controller.',
+					'Forward controller log messages to the Companion log. Higher levels include all messages from lower levels. "Debug" can be very noisy on a busy controller. The controller itself may need a matching or higher log level set in Designer for messages to be broadcast.',
 			},
 			{
 				type: 'number',
