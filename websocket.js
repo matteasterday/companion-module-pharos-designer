@@ -14,6 +14,7 @@ export class PharosWebSocket {
 
 	connect(host, token) {
 		if (this.destroyed) return
+		this._close() // Clean up any existing connection before creating a new one
 		this.host = host
 		this.token = token
 
@@ -28,7 +29,18 @@ export class PharosWebSocket {
 			return
 		}
 
+		// Connection timeout — if not connected within 10s, give up and reconnect
+		this._connectionTimeout = setTimeout(() => {
+			if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+				this.instance.log('warn', 'WebSocket connection timed out')
+				this._close()
+				this._scheduleReconnect()
+			}
+		}, 10000)
+
 		this.ws.on('open', () => {
+			clearTimeout(this._connectionTimeout)
+			this._connectionTimeout = null
 			this.instance.log('info', 'WebSocket connected')
 			this.reconnectDelay = 1000
 			this._subscribe('timeline')
@@ -269,6 +281,7 @@ export class PharosWebSocket {
 					this.instance.config.user,
 					this.instance.config.password,
 				)
+				if (this.destroyed) return // destroyed while awaiting auth
 				if (authRes.success) {
 					this.token = this.instance.controller.token
 					this.connect(this.host, this.token)
@@ -287,6 +300,8 @@ export class PharosWebSocket {
 
 	_close() {
 		this._stopKeepAlive()
+		clearTimeout(this._connectionTimeout)
+		this._connectionTimeout = null
 		if (this.ws) {
 			this.ws.removeAllListeners()
 			if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
