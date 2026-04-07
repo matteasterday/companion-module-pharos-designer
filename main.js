@@ -322,7 +322,11 @@ class PharosInstance extends InstanceBase {
 		if (interval <= 0) return
 		this.log('debug', `Input polling every ${interval}s`)
 		this.inputPollTimer = setInterval(() => {
-			this.refreshInputs()
+			if (this._inputPollInFlight) return
+			this._inputPollInFlight = true
+			this.refreshInputs().finally(() => {
+				this._inputPollInFlight = false
+			})
 		}, interval * 1000)
 	}
 
