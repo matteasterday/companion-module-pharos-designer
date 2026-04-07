@@ -202,6 +202,12 @@ export class PharosWebSocket {
 		const logLevel = this.instance.config.controllerLogLevel
 		if (!logLevel || logLevel === 'off') return
 
+		// Raw log mode — dump unprocessed data for debugging
+		if (logLevel === 'raw') {
+			this.instance.log('warn', `[RAW LOG] ${JSON.stringify(data.log)}`)
+			return
+		}
+
 		// Log levels from the API: 2=Critical, 3=Terse, 4=Normal, 5=Extended, 6=Verbose, 7=Debug
 		// Log categories: 16=System, 17=Project, 18=Time, 19=Output, 20=IO, 21=Trigger, 22=Controller API, 23=DALI
 		const categoryNames = {
@@ -211,7 +217,7 @@ export class PharosWebSocket {
 			19: 'Output',
 			20: 'IO',
 			21: 'Trigger',
-			22: 'API',
+			22: 'Controller API',
 			23: 'DALI',
 		}
 		const levelNames = { 2: 'Critical', 3: 'Terse', 4: 'Normal', 5: 'Extended', 6: 'Verbose', 7: 'Debug' }
@@ -223,25 +229,20 @@ export class PharosWebSocket {
 			const typeCode = entry.charCodeAt(0)
 			const levelCode = entry.charCodeAt(1)
 
-			// Filter by configured level (API levels: 2=Critical, 3=Terse, 4=Normal, 5=Extended, 6=Verbose, 7=Debug)
-			const maxLevel = { warnings: 3, normal: 4, extended: 5, verbose: 6, debug: 7 }
-			if (levelCode > (maxLevel[logLevel] || 3)) continue
-
 			const category = categoryNames[typeCode] || `Cat${typeCode}`
 			const level = levelNames[levelCode] || `Lvl${levelCode}`
 
-			// Extract message text — skip the offset (variable hex) and timestamp (8 hex chars)
-			// Find the first space after the offset+timestamp to get the message
+			// Extract message text: after category+level bytes, format is:
+			// <hex UTC offset><space><8 hex timestamp chars><message text><\n>
 			const rest = entry.substring(2)
 			const spaceIdx = rest.indexOf(' ')
-			if (spaceIdx === -1) continue
-			const timestampAndMsg = rest.substring(spaceIdx + 1)
-			const msgSpaceIdx = timestampAndMsg.indexOf(' ')
-			const message = msgSpaceIdx !== -1 ? timestampAndMsg.substring(msgSpaceIdx + 1) : timestampAndMsg
+			if (spaceIdx === -1 || rest.length < spaceIdx + 9) continue
+			// Skip offset (variable hex), space, and 8-char hex timestamp
+			const message = rest.substring(spaceIdx + 9)
 
-			// Map controller log levels to Companion log levels
-			const companionLevel = levelCode <= 3 ? 'warn' : levelCode <= 4 ? 'info' : 'debug'
-			this.instance.log(companionLevel, `[${category}/${level}] ${message.trim()}`)
+			// User opted in to see these — use warn for critical/terse, info for everything else
+			const companionLevel = levelCode <= 3 ? 'warn' : 'info'
+			this.instance.log(companionLevel, `[${level}/${category}] ${message.trim()}`)
 		}
 	}
 

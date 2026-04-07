@@ -252,14 +252,11 @@ class PharosInstance extends InstanceBase {
 				default: 'off',
 				choices: [
 					{ id: 'off', label: 'Off' },
-					{ id: 'warnings', label: 'Warnings (Critical + Terse)' },
-					{ id: 'normal', label: 'Normal' },
-					{ id: 'extended', label: 'Extended' },
-					{ id: 'verbose', label: 'Verbose' },
-					{ id: 'debug', label: 'Debug (all messages)' },
+					{ id: 'on', label: 'On' },
+					{ id: 'raw', label: 'Raw (troubleshooting only)' },
 				],
 				tooltip:
-					'Forward controller log messages to the Companion log. Higher levels include all messages from lower levels. "Debug" can be very noisy on a busy controller. The controller itself may need a matching or higher log level set in Designer for messages to be broadcast.',
+					'Forward controller log messages to the Companion log. The controller determines which messages are broadcast based on its own log level — configure this at http://<controller-ip>/config.lsp. "Raw" outputs unprocessed log data for troubleshooting parser issues — do not use in production.',
 			},
 			{
 				type: 'number',
