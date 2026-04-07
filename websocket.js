@@ -76,7 +76,11 @@ export class PharosWebSocket {
 
 	_send(obj) {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-			this.ws.send(JSON.stringify(obj))
+			try {
+				this.ws.send(JSON.stringify(obj))
+			} catch (e) {
+				this.instance.log('debug', 'WebSocket send failed: ' + e.message)
+			}
 		}
 	}
 
