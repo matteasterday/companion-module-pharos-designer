@@ -115,7 +115,7 @@ export class PharosWebSocket {
 			this._handleBeaconBroadcast(msg.data)
 		} else if (msg.broadcast === 'remote_device') {
 			this._handleRemoteDeviceBroadcast(msg.data)
-		} else if (msg.request === 'log') {
+		} else if (msg.broadcast === 'log' || msg.request === 'log') {
 			this._handleLogMessage(msg.data)
 		}
 	}
@@ -216,27 +216,31 @@ export class PharosWebSocket {
 		// Parse log entries — each starts with \u0007
 		const entries = data.log.split('\u0007').filter((e) => e.length > 0)
 		for (const entry of entries) {
-			if (entry.length < 2) continue
-			const typeCode = entry.charCodeAt(0)
-			const levelCode = entry.charCodeAt(1)
+			try {
+				if (entry.length < 2) continue
+				const typeCode = entry.charCodeAt(0)
+				const levelCode = entry.charCodeAt(1)
 
-			// Filter by configured level
-			if (logLevel === 'warnings' && levelCode > 3) continue
+				// Filter by configured level
+				if (logLevel === 'warnings' && levelCode > 3) continue
 
-			const category = categoryNames[typeCode] || `Cat${typeCode}`
-			const level = levelNames[levelCode] || `Lvl${levelCode}`
+				const category = categoryNames[typeCode] || `Cat${typeCode}`
+				const level = levelNames[levelCode] || `Lvl${levelCode}`
 
-			// Extract message text — skip the offset (variable hex) and timestamp (8 hex chars)
-			// Find the first space after the offset+timestamp to get the message
-			const rest = entry.substring(2)
-			const spaceIdx = rest.indexOf(' ')
-			if (spaceIdx === -1) continue
-			const timestampAndMsg = rest.substring(spaceIdx + 1)
-			const msgSpaceIdx = timestampAndMsg.indexOf(' ')
-			const message = msgSpaceIdx !== -1 ? timestampAndMsg.substring(msgSpaceIdx + 1) : timestampAndMsg
+				// Extract message text — skip the offset (variable hex) and timestamp (8 hex chars)
+				// Find the first space after the offset+timestamp to get the message
+				const rest = entry.substring(2)
+				const spaceIdx = rest.indexOf(' ')
+				if (spaceIdx === -1) continue
+				const timestampAndMsg = rest.substring(spaceIdx + 1)
+				const msgSpaceIdx = timestampAndMsg.indexOf(' ')
+				const message = msgSpaceIdx !== -1 ? timestampAndMsg.substring(msgSpaceIdx + 1) : timestampAndMsg
 
-			const companionLevel = levelCode <= 3 ? 'warn' : 'debug'
-			this.instance.log(companionLevel, `[${category}/${level}] ${message.trim()}`)
+				const companionLevel = levelCode <= 3 ? 'warn' : 'debug'
+				this.instance.log(companionLevel, `[${category}/${level}] ${message.trim()}`)
+			} catch (e) {
+				this.instance.log('debug', `Log entry parse error: ${e.message}`)
+			}
 		}
 	}
 
