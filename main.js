@@ -209,6 +209,14 @@ class PharosInstance extends InstanceBase {
 					'When enabled, the module maintains a WebSocket connection for real-time button feedback updates. Disable to use HTTP polling instead (for older firmware or limited connections — LPC supports 8, LPC X and VLC support 16).',
 			},
 			{
+				type: 'checkbox',
+				id: 'useSecureWebSocket',
+				label: 'Use secure WebSocket (wss://)',
+				width: 12,
+				default: false,
+				tooltip: 'Connect over wss:// (TLS) instead of ws://. Enable if your controller has HTTPS enabled (port 443).',
+			},
+			{
 				type: 'dropdown',
 				id: 'controllerLogLevel',
 				label: 'Controller log forwarding',

@@ -18,7 +18,8 @@ export class PharosWebSocket {
 		this.host = host
 		this.token = token
 
-		const url = `ws://${host}/query`
+		const protocol = this.instance.config.useSecureWebSocket ? 'wss' : 'ws'
+		const url = `${protocol}://${host}/query`
 		this.instance.log('debug', `WebSocket connecting to ${url}`)
 
 		try {
