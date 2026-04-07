@@ -15,6 +15,7 @@ export function getActions(self) {
 					label: 'Action',
 					choices: [
 						{ id: 'start', label: 'Start' },
+						{ id: 'start_release_others', label: 'Start & Release Others' },
 						{ id: 'release', label: 'Release' },
 						{ id: 'toggle', label: 'Toggle' },
 						{ id: 'pause', label: 'Pause' },
@@ -34,12 +35,13 @@ export function getActions(self) {
 				},
 				{
 					id: 'rate',
-					type: 'textinput',
+					type: 'number',
 					label: 'Rate (0.1 to 1 is default timeline rate)',
 					isVisibleExpression: '$(options:action) === "set_rate"',
 					min: 0,
-					max: 1,
+					max: 10,
 					default: 1,
+					step: 0.1,
 					required: true,
 				},
 				{
@@ -57,11 +59,11 @@ export function getActions(self) {
 				},
 			],
 			callback: (event) => {
-				event = event.options
-				console.log(event)
-				const action = event.action
-				delete event.action
-				const options = event
+				const { action, num, fade, rate, position } = event.options
+				const options = { num, fade }
+				if (action === 'set_rate') options.rate = rate
+				if (action === 'set_position') options.position = position
+				self.log('debug', `controlTimeline: ${action} ${JSON.stringify(options)}`)
 				self.controlTimeline(action, options)
 			},
 		},
@@ -98,13 +100,9 @@ export function getActions(self) {
 				},
 			],
 			callback: (event) => {
-				// currently only master-intensity is supported
-				// therefore the string is hard coded in here
-				// in future API versions this might change and
-				// a new input field needs to be added
-				event = event.options
-				const options = event
-				console.log(options)
+				const { num, level, fade } = event.options
+				const options = { num, level, fade }
+				self.log('debug', `controlGroup: ${JSON.stringify(options)}`)
 				self.controlGroup('master_intensity', options)
 			},
 		},
@@ -123,6 +121,7 @@ export function getActions(self) {
 					label: 'Action',
 					choices: [
 						{ id: 'start', label: 'Start' },
+						{ id: 'start_release_others', label: 'Start & Release Others' },
 						{ id: 'release', label: 'Release' },
 						{ id: 'toggle', label: 'Toggle' },
 					],
@@ -143,11 +142,8 @@ export function getActions(self) {
 				},
 			],
 			callback: (event) => {
-				event = event.options
-				const action = event.action
-				delete event.action
-				const options = event
-				self.controlScene(action, options)
+				const { action, num, fade } = event.options
+				self.controlScene(action, { num, fade })
 			},
 		},
 		controlTriggers: {
@@ -174,14 +170,17 @@ export function getActions(self) {
 				},
 			],
 			callback: (event) => {
-				// currently only fire is supported
-				// therefore the string is hard coded in here
-				// in future API versions this might change and
-				// a new input field needs to be added
-				event = event.options
-				const options = event
-				console.log(options)
+				const { num, var: varStr, conditions } = event.options
+				const options = { num, var: varStr, conditions }
+				self.log('debug', `controlTrigger: ${JSON.stringify(options)}`)
 				self.controlTrigger('fire', options)
+			},
+		},
+		refreshInputs: {
+			name: 'Refresh Inputs',
+			options: [],
+			callback: () => {
+				self.refreshInputs()
 			},
 		},
 	}

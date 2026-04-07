@@ -4,7 +4,10 @@
 	"main": "main.js",
 	"scripts": {
 		"format": "prettier -w .",
-		"build": "yarn companion-module-build --dev"
+		"lint:raw": "eslint",
+		"lint": "yarn lint:raw .",
+		"build": "yarn companion-module-build --dev",
+		"postinstall": "husky"
 	},
 	"type": "module",
 	"license": "MIT",
@@ -15,10 +18,24 @@
 	"dependencies": {
 		"@companion-module/base": "~1.12.1",
 		"pharos-controllers": "^1.2.0",
-		"typescript": "^5.0.4"
+		"ws": "^8.20.0"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^2.6.1"
+		"@companion-module/tools": "^2.6.1",
+		"eslint": "^9.39.4",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.5.2",
+		"prettier": "^3.8.1",
+		"typescript": "^5.0.4"
+	},
+	"lint-staged": {
+		"*.{css,json,md,scss}": [
+			"prettier --write"
+		],
+		"*.{js,jsx}": [
+			"eslint --fix",
+			"prettier --write"
+		]
 	},
 	"prettier": "@companion-module/tools/.prettierrc.json"
 }

@@ -20,5 +20,6 @@ generated
 node_modules
 
 pkg
-pkg.tgz
+*.tgz
 DEBUG-PACKAGED
+mock-server.js

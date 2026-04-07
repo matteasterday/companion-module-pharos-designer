@@ -1,2 +1,4 @@
 package.json
 pkg
+node_modules
+*.tgz
