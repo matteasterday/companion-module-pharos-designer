@@ -75,7 +75,7 @@ class PharosInstance extends InstanceBase {
 				if (self.lastStatus != InstanceStatus.UnknownError) {
 					self.updateStatus(InstanceStatus.UnknownError, 'Network error')
 					self.lastStatus = InstanceStatus.UnknownError
-					self.log('error', 'A network error occured while trying to authenticate')
+					self.log('error', 'A network error occurred while trying to authenticate')
 				}
 				this.pharosConnected = false
 			} else if (authRes.success) {
@@ -98,11 +98,7 @@ class PharosInstance extends InstanceBase {
 				) {
 					this.log('debug', 'Storing variables...')
 					// filter groups first because some dont have an id
-					this.filteredGroups = this.groupsResponse.groups.filter(function (group) {
-						if (group.num) {
-							return group
-						}
-					})
+					this.filteredGroups = this.groupsResponse.groups.filter((group) => !!group.num)
 					// mapping the data to select option arrays
 					this.actionData.groups = this.filteredGroups.map(function (group) {
 						return { id: group.num, label: group.name }
@@ -170,7 +166,7 @@ class PharosInstance extends InstanceBase {
 	}
 
 	async configUpdated(config) {
-		this.init(config)
+		await this.init(config)
 	}
 
 	// Return config fields for web config
