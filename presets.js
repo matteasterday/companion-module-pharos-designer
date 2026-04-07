@@ -32,7 +32,7 @@ export function getPresets(self) {
 				category: tlCat,
 				name: `Start ${tl.label}`,
 				style: {
-					text: `START\\n${tl.label}`,
+					text: `START\\n$(${self.label}:timeline_${tl.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkGreen,
@@ -63,7 +63,7 @@ export function getPresets(self) {
 				category: tlCat,
 				name: `Release ${tl.label}`,
 				style: {
-					text: `RELEASE\\n${tl.label}`,
+					text: `RELEASE\\n$(${self.label}:timeline_${tl.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkRed,
@@ -94,7 +94,7 @@ export function getPresets(self) {
 				category: tlCat,
 				name: `Toggle ${tl.label}`,
 				style: {
-					text: `TOGGLE\\n${tl.label}`,
+					text: `TOGGLE\\n$(${self.label}:timeline_${tl.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
@@ -135,7 +135,7 @@ export function getPresets(self) {
 				category: tlCat,
 				name: `Pause ${tl.label}`,
 				style: {
-					text: `PAUSE\\n${tl.label}`,
+					text: `PAUSE\\n$(${self.label}:timeline_${tl.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
@@ -166,7 +166,7 @@ export function getPresets(self) {
 				category: tlCat,
 				name: `Resume ${tl.label}`,
 				style: {
-					text: `RESUME\\n${tl.label}`,
+					text: `RESUME\\n$(${self.label}:timeline_${tl.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
@@ -197,7 +197,7 @@ export function getPresets(self) {
 				category: tlCat,
 				name: `${tl.label} Status`,
 				style: {
-					text: `${tl.label}\\n$(${self.label}:timeline_${tl.id}_state)`,
+					text: `$(${self.label}:timeline_${tl.id}_name)\\n$(${self.label}:timeline_${tl.id}_state)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
@@ -232,7 +232,7 @@ export function getPresets(self) {
 				category: scCat,
 				name: `Start ${sc.label}`,
 				style: {
-					text: `START\\n${sc.label}`,
+					text: `START\\n$(${self.label}:scene_${sc.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkGreen,
@@ -263,7 +263,7 @@ export function getPresets(self) {
 				category: scCat,
 				name: `Release ${sc.label}`,
 				style: {
-					text: `RELEASE\\n${sc.label}`,
+					text: `RELEASE\\n$(${self.label}:scene_${sc.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkRed,
@@ -294,7 +294,7 @@ export function getPresets(self) {
 				category: scCat,
 				name: `Start & Rel Others ${sc.label}`,
 				style: {
-					text: `START+REL\\n${sc.label}`,
+					text: `START+REL\\n$(${self.label}:scene_${sc.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkGreen,
@@ -325,7 +325,7 @@ export function getPresets(self) {
 				category: scCat,
 				name: `Toggle ${sc.label}`,
 				style: {
-					text: `TOGGLE\\n${sc.label}`,
+					text: `TOGGLE\\n$(${self.label}:scene_${sc.id}_name)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
@@ -356,7 +356,7 @@ export function getPresets(self) {
 				category: scCat,
 				name: `${sc.label} Status`,
 				style: {
-					text: `${sc.label}\\n$(${self.label}:scene_${sc.id}_state)`,
+					text: `$(${self.label}:scene_${sc.id}_name)\\n$(${self.label}:scene_${sc.id}_state)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
@@ -396,7 +396,7 @@ export function getPresets(self) {
 				category: grCat,
 				name: `${gr.label} Level`,
 				style: {
-					text: `${gr.label}\\n$(${self.label}:group_${gr.id}_level)%`,
+					text: `$(${self.label}:group_${gr.id}_name)\\n$(${self.label}:group_${gr.id}_level)%`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
@@ -418,7 +418,7 @@ export function getPresets(self) {
 					category: grCat,
 					name: `Set ${gr.label} to ${gl.label}`,
 					style: {
-						text: `${gr.label}\\n${gl.label}`,
+						text: `$(${self.label}:group_${gr.id}_name)\\n${gl.label}`,
 						size: 'auto',
 						color: ColorWhite,
 						bgcolor: gl.level === 0 ? BgDarkRed : BgDarkBlue,

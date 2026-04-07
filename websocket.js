@@ -263,7 +263,7 @@ export class PharosWebSocket {
 			if (this.destroyed) return
 
 			if (groupsRes.success && scenesRes.success && timelinesRes.success && triggersRes.success) {
-				inst.filteredGroups = groupsRes.groups?.map((g) => ({ ...g, num: g.num ?? 0 })) || []
+				inst.filteredGroups = groupsRes.groups?.filter((g) => g.num != null) || []
 				inst.actionData.groups = inst.filteredGroups.map((g) => ({ id: g.num, label: g.name }))
 				if (!inst.actionData.groups.length) inst.actionData.groups = [{ id: 0, label: 'No groups found' }]
 				inst.actionData.scenes = scenesRes.scenes?.map((s) => ({ id: s.num, label: s.name })) || []

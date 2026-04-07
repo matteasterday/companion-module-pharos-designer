@@ -5,12 +5,10 @@ export function getVariables(self) {
 	if (self.actionData.timelines) {
 		for (const tl of self.actionData.timelines) {
 			if (tl.id === 0) continue
-			variables.push({ variableId: `timeline_${tl.id}_state`, name: `Timeline ${tl.id} (${tl.label}) State` })
-			variables.push({ variableId: `timeline_${tl.id}_onstage`, name: `Timeline ${tl.id} (${tl.label}) On Stage` })
-			variables.push({
-				variableId: `timeline_${tl.id}_position`,
-				name: `Timeline ${tl.id} (${tl.label}) Position (ms)`,
-			})
+			variables.push({ variableId: `timeline_${tl.id}_name`, name: `Timeline ${tl.id} Name` })
+			variables.push({ variableId: `timeline_${tl.id}_state`, name: `Timeline ${tl.id} State` })
+			variables.push({ variableId: `timeline_${tl.id}_onstage`, name: `Timeline ${tl.id} On Stage` })
+			variables.push({ variableId: `timeline_${tl.id}_position`, name: `Timeline ${tl.id} Position (ms)` })
 		}
 	}
 
@@ -18,8 +16,9 @@ export function getVariables(self) {
 	if (self.actionData.scenes) {
 		for (const sc of self.actionData.scenes) {
 			if (sc.id === 0) continue
-			variables.push({ variableId: `scene_${sc.id}_state`, name: `Scene ${sc.id} (${sc.label}) State` })
-			variables.push({ variableId: `scene_${sc.id}_onstage`, name: `Scene ${sc.id} (${sc.label}) On Stage` })
+			variables.push({ variableId: `scene_${sc.id}_name`, name: `Scene ${sc.id} Name` })
+			variables.push({ variableId: `scene_${sc.id}_state`, name: `Scene ${sc.id} State` })
+			variables.push({ variableId: `scene_${sc.id}_onstage`, name: `Scene ${sc.id} On Stage` })
 		}
 	}
 

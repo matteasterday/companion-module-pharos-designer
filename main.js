@@ -109,11 +109,9 @@ class PharosInstance extends InstanceBase {
 					this.triggersResponse.success
 				) {
 					this.log('debug', 'Storing variables...')
-					// Normalize groups — API omits num for "All Fixtures" group (treat as 0)
-					this.filteredGroups = this.groupsResponse.groups.map((group) => ({
-						...group,
-						num: group.num ?? 0,
-					}))
+					// Keep only groups with a num property (auto-generated fixture type groups have no num)
+					// The "All Fixtures" group has num=0
+					this.filteredGroups = this.groupsResponse.groups.filter((group) => group.num != null)
 					// mapping the data to select option arrays
 					this.actionData.groups = this.filteredGroups.map((group) => ({ id: group.num, label: group.name }))
 					if (!this.actionData.groups.length) this.actionData.groups = [{ id: 0, label: 'No groups found' }]
@@ -139,6 +137,7 @@ class PharosInstance extends InstanceBase {
 					for (const tl of this.timelinesResponse.timelines || []) {
 						this.state.timelines.set(tl.num, {
 							num: tl.num,
+							name: tl.name || '',
 							state: tl.state || 'none',
 							onstage: tl.onstage || false,
 							position: tl.position || 0,
@@ -147,6 +146,7 @@ class PharosInstance extends InstanceBase {
 					for (const sc of this.scenesResponse.scenes || []) {
 						this.state.scenes.set(sc.num, {
 							num: sc.num,
+							name: sc.name || '',
 							state: sc.state || 'none',
 							onstage: sc.onstage || false,
 						})
@@ -278,11 +278,13 @@ class PharosInstance extends InstanceBase {
 	_seedVariableValues() {
 		const values = {}
 		for (const [num, tl] of this.state.timelines) {
+			values[`timeline_${num}_name`] = tl.name || ''
 			values[`timeline_${num}_state`] = formatState(tl.state)
 			values[`timeline_${num}_onstage`] = String(tl.onstage)
 			values[`timeline_${num}_position`] = tl.position
 		}
 		for (const [num, sc] of this.state.scenes) {
+			values[`scene_${num}_name`] = sc.name || ''
 			values[`scene_${num}_state`] = formatState(sc.state)
 			values[`scene_${num}_onstage`] = String(sc.onstage)
 		}
