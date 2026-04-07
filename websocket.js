@@ -1,4 +1,5 @@
 import WebSocket from 'ws'
+import { InstanceStatus } from '@companion-module/base'
 import { formatState } from './utils.js'
 
 export class PharosWebSocket {
@@ -14,6 +15,7 @@ export class PharosWebSocket {
 
 	connect(host, token) {
 		if (this.destroyed) return
+		this._close()
 		this.host = host
 		this.token = token
 
@@ -30,6 +32,8 @@ export class PharosWebSocket {
 
 		this.ws.on('open', () => {
 			this.instance.log('info', 'WebSocket connected')
+			this.instance.pharosConnected = true
+			this.instance.updateStatus(InstanceStatus.Ok)
 			this.reconnectDelay = 1000
 			this._subscribe('timeline')
 			this._subscribe('scene')
@@ -53,6 +57,10 @@ export class PharosWebSocket {
 
 		this.ws.on('close', () => {
 			this.instance.log('info', 'WebSocket disconnected')
+			this.instance.pharosConnected = false
+			if (!this.destroyed) {
+				this.instance.updateStatus(InstanceStatus.ConnectionFailure, 'WebSocket disconnected')
+			}
 			this._stopKeepAlive()
 			this.instance.setVariableValues({ ws_connected: 'false' })
 			if (!this.destroyed) {
@@ -108,15 +116,15 @@ export class PharosWebSocket {
 		if (!data || data.num == null) return
 		this.instance.state.timelines.set(data.num, {
 			num: data.num,
-			state: data.state,
-			onstage: data.onstage,
-			position: data.position,
+			state: data.state || 'none',
+			onstage: data.onstage ?? false,
+			position: data.position ?? 0,
 		})
 		this.instance.log('debug', `Timeline ${data.num} -> ${data.state}`)
 		this.instance.setVariableValues({
-			[`timeline_${data.num}_state`]: formatState(data.state),
-			[`timeline_${data.num}_onstage`]: String(data.onstage),
-			[`timeline_${data.num}_position`]: data.position,
+			[`timeline_${data.num}_state`]: formatState(data.state || 'none'),
+			[`timeline_${data.num}_onstage`]: String(data.onstage ?? false),
+			[`timeline_${data.num}_position`]: data.position ?? 0,
 		})
 		this.instance.checkFeedbacks('timelineState')
 	}
@@ -125,13 +133,13 @@ export class PharosWebSocket {
 		if (!data || data.num == null) return
 		this.instance.state.scenes.set(data.num, {
 			num: data.num,
-			state: data.state,
-			onstage: data.onstage,
+			state: data.state || 'none',
+			onstage: data.onstage ?? false,
 		})
 		this.instance.log('debug', `Scene ${data.num} -> ${data.state}`)
 		this.instance.setVariableValues({
-			[`scene_${data.num}_state`]: formatState(data.state),
-			[`scene_${data.num}_onstage`]: String(data.onstage),
+			[`scene_${data.num}_state`]: formatState(data.state || 'none'),
+			[`scene_${data.num}_onstage`]: String(data.onstage ?? false),
 		})
 		this.instance.checkFeedbacks('sceneState')
 	}
@@ -140,13 +148,13 @@ export class PharosWebSocket {
 		if (!data || data.num == null) return
 		this.instance.state.groups.set(data.num, {
 			num: data.num,
-			name: data.name,
-			level: data.level,
+			name: data.name || '',
+			level: data.level ?? 0,
 		})
 		this.instance.log('debug', `Group ${data.num} (${data.name}) level -> ${data.level}`)
 		this.instance.setVariableValues({
-			[`group_${data.num}_level`]: data.level,
-			[`group_${data.num}_name`]: data.name,
+			[`group_${data.num}_level`]: data.level ?? 0,
+			[`group_${data.num}_name`]: data.name || '',
 		})
 		this.instance.checkFeedbacks('groupState')
 	}
@@ -161,21 +169,26 @@ export class PharosWebSocket {
 	}
 
 	_handleRemoteDeviceBroadcast(data) {
-		if (!data || !data.remote_devices) return
+		if (!data) return
 		const values = {}
-		for (const dev of data.remote_devices) {
+		// Handle both array format and individual device format
+		const devices = data.remote_devices || (data.num != null ? [data] : [])
+		for (const dev of devices) {
 			this.instance.state.remoteDevices.set(dev.num, {
 				num: dev.num,
-				name: dev.name,
-				online: dev.online,
-				type: dev.type,
+				name: dev.name || dev.type || '',
+				online: dev.online ?? false,
+				type: dev.type || '',
 			})
-			values[`remote_device_${dev.num}_name`] = dev.name
+			values[`remote_device_${dev.num}_name`] = dev.name || dev.type || ''
 			values[`remote_device_${dev.num}_online`] = dev.online ? 'Online' : 'Offline'
-			values[`remote_device_${dev.num}_type`] = dev.type
+			values[`remote_device_${dev.num}_type`] = dev.type || ''
 		}
-		this.instance.log('debug', `Remote devices updated: ${data.remote_devices.length} devices`)
-		this.instance.setVariableValues(values)
+		if (devices.length > 0) {
+			this.instance.log('debug', `Remote devices updated: ${devices.length} devices`)
+			this.instance.setVariableValues(values)
+			this.instance.updateVariableDefinitions()
+		}
 	}
 
 	_handleLogMessage(data) {
@@ -234,6 +247,63 @@ export class PharosWebSocket {
 		}
 	}
 
+	async _refreshAfterReconnect() {
+		try {
+			const inst = this.instance
+			const [groupsRes, scenesRes, timelinesRes, triggersRes] = await Promise.all([
+				inst.controller.getGroups(),
+				inst.controller.getScenes(),
+				inst.controller.getTimelines(),
+				inst.controller.getTriggers(),
+			])
+			if (this.destroyed) return
+
+			if (groupsRes.success && scenesRes.success && timelinesRes.success && triggersRes.success) {
+				inst.filteredGroups = groupsRes.groups?.filter((g) => g.num) || []
+				inst.actionData.groups = inst.filteredGroups.map((g) => ({ id: g.num, label: g.name }))
+				if (!inst.actionData.groups.length) inst.actionData.groups = [{ id: 0, label: 'No groups found' }]
+				inst.actionData.scenes = scenesRes.scenes?.map((s) => ({ id: s.num, label: s.name })) || []
+				if (!inst.actionData.scenes.length) inst.actionData.scenes = [{ id: 0, label: 'No scenes found' }]
+				inst.actionData.timelines = timelinesRes.timelines?.map((t) => ({ id: t.num, label: t.name })) || []
+				if (!inst.actionData.timelines.length) inst.actionData.timelines = [{ id: 0, label: 'No timelines found' }]
+				inst.actionData.triggers = triggersRes.triggers?.map((t) => ({ id: t.num, label: t.name })) || []
+				if (!inst.actionData.triggers.length) inst.actionData.triggers = [{ id: 0, label: 'No triggers found' }]
+
+				for (const tl of timelinesRes.timelines || []) {
+					inst.state.timelines.set(tl.num, {
+						num: tl.num,
+						state: tl.state || 'none',
+						onstage: tl.onstage ?? false,
+						position: tl.position ?? 0,
+					})
+				}
+				for (const sc of scenesRes.scenes || []) {
+					inst.state.scenes.set(sc.num, {
+						num: sc.num,
+						state: sc.state || 'none',
+						onstage: sc.onstage ?? false,
+					})
+				}
+				for (const gr of inst.filteredGroups) {
+					inst.state.groups.set(gr.num, {
+						num: gr.num,
+						name: gr.name,
+						level: gr.level ?? 0,
+					})
+				}
+
+				inst.updateActions()
+				inst.updateFeedbacks()
+				inst.updateVariableDefinitions()
+				inst.updatePresets()
+				inst._seedVariableValues()
+				inst.log('debug', 'Refreshed controller data after reconnect')
+			}
+		} catch (e) {
+			this.instance.log('warn', `Failed to refresh data after reconnect: ${e.message}`)
+		}
+	}
+
 	_startKeepAlive() {
 		this._stopKeepAlive()
 		this.keepAliveInterval = setInterval(() => {
@@ -259,14 +329,16 @@ export class PharosWebSocket {
 			this.reconnectTimer = null
 			if (this.destroyed) return
 
-			// Re-authenticate to get a fresh token
 			try {
 				const authRes = await this.instance.controller.authenticate(
 					this.instance.config.user,
 					this.instance.config.password,
 				)
+				if (this.destroyed) return
 				if (authRes.success) {
 					this.token = this.instance.controller.token
+					await this._refreshAfterReconnect()
+					if (this.destroyed) return
 					this.connect(this.host, this.token)
 				} else {
 					this.instance.log('error', 'WebSocket re-auth failed, retrying...')
@@ -274,6 +346,7 @@ export class PharosWebSocket {
 					this._scheduleReconnect()
 				}
 			} catch (e) {
+				if (this.destroyed) return
 				this.instance.log('error', `WebSocket re-auth error: ${e.message}`)
 				this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay)
 				this._scheduleReconnect()

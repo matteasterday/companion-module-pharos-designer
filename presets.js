@@ -33,7 +33,7 @@ export function getPresets(self) {
 				name: `Start ${tl.label}`,
 				style: {
 					text: `START\\n${tl.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkGreen,
 				},
@@ -49,7 +49,7 @@ export function getPresets(self) {
 						down: [
 							{
 								actionId: 'controlTimeline',
-								options: { action: 'start', num: tl.id, fade: 0 },
+								options: { action: 'start', num: tl.id },
 							},
 						],
 						up: [],
@@ -64,7 +64,7 @@ export function getPresets(self) {
 				name: `Release ${tl.label}`,
 				style: {
 					text: `RELEASE\\n${tl.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkRed,
 				},
@@ -80,7 +80,7 @@ export function getPresets(self) {
 						down: [
 							{
 								actionId: 'controlTimeline',
-								options: { action: 'release', num: tl.id, fade: 0 },
+								options: { action: 'release', num: tl.id },
 							},
 						],
 						up: [],
@@ -95,7 +95,7 @@ export function getPresets(self) {
 				name: `Toggle ${tl.label}`,
 				style: {
 					text: `TOGGLE\\n${tl.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
 				},
@@ -110,13 +110,18 @@ export function getPresets(self) {
 						options: { timeline: tl.id, state: 'paused' },
 						style: { bgcolor: ColorOrange, color: ColorBlack },
 					},
+					{
+						feedbackId: 'timelineState',
+						options: { timeline: tl.id, state: 'released' },
+						style: { bgcolor: ColorGray, color: ColorWhite },
+					},
 				],
 				steps: [
 					{
 						down: [
 							{
 								actionId: 'controlTimeline',
-								options: { action: 'toggle', num: tl.id, fade: 0 },
+								options: { action: 'toggle', num: tl.id },
 							},
 						],
 						up: [],
@@ -131,7 +136,7 @@ export function getPresets(self) {
 				name: `Pause ${tl.label}`,
 				style: {
 					text: `PAUSE\\n${tl.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
 				},
@@ -162,7 +167,7 @@ export function getPresets(self) {
 				name: `Resume ${tl.label}`,
 				style: {
 					text: `RESUME\\n${tl.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
 				},
@@ -193,7 +198,7 @@ export function getPresets(self) {
 				name: `${tl.label} Status`,
 				style: {
 					text: `${tl.label}\\n$(${self.label}:timeline_${tl.id}_state)`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
 				},
@@ -228,7 +233,7 @@ export function getPresets(self) {
 				name: `Start ${sc.label}`,
 				style: {
 					text: `START\\n${sc.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkGreen,
 				},
@@ -244,7 +249,7 @@ export function getPresets(self) {
 						down: [
 							{
 								actionId: 'controlScenes',
-								options: { action: 'start', num: sc.id, fade: 0 },
+								options: { action: 'start', num: sc.id },
 							},
 						],
 						up: [],
@@ -259,7 +264,7 @@ export function getPresets(self) {
 				name: `Release ${sc.label}`,
 				style: {
 					text: `RELEASE\\n${sc.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkRed,
 				},
@@ -275,7 +280,7 @@ export function getPresets(self) {
 						down: [
 							{
 								actionId: 'controlScenes',
-								options: { action: 'release', num: sc.id, fade: 0 },
+								options: { action: 'release', num: sc.id },
 							},
 						],
 						up: [],
@@ -290,7 +295,7 @@ export function getPresets(self) {
 				name: `Start & Rel Others ${sc.label}`,
 				style: {
 					text: `START+REL\\n${sc.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: BgDarkGreen,
 				},
@@ -306,7 +311,7 @@ export function getPresets(self) {
 						down: [
 							{
 								actionId: 'controlScenes',
-								options: { action: 'start_release_others', num: sc.id, fade: 0 },
+								options: { action: 'start_release_others', num: sc.id },
 							},
 						],
 						up: [],
@@ -321,7 +326,7 @@ export function getPresets(self) {
 				name: `Toggle ${sc.label}`,
 				style: {
 					text: `TOGGLE\\n${sc.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
 				},
@@ -337,7 +342,7 @@ export function getPresets(self) {
 						down: [
 							{
 								actionId: 'controlScenes',
-								options: { action: 'toggle', num: sc.id, fade: 0 },
+								options: { action: 'toggle', num: sc.id },
 							},
 						],
 						up: [],
@@ -352,7 +357,7 @@ export function getPresets(self) {
 				name: `${sc.label} Status`,
 				style: {
 					text: `${sc.label}\\n$(${self.label}:scene_${sc.id}_state)`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
 				},
@@ -372,13 +377,13 @@ export function getPresets(self) {
 
 	if (self.actionData.groups) {
 		const groupLevels = [
-			{ pct: 0, level: 0, label: '0%' },
-			{ pct: 15, level: 0.15, label: '15%' },
-			{ pct: 30, level: 0.3, label: '30%' },
-			{ pct: 50, level: 0.5, label: '50%' },
-			{ pct: 70, level: 0.7, label: '70%' },
-			{ pct: 85, level: 0.85, label: '85%' },
-			{ pct: 100, level: 1, label: '100%' },
+			{ level: 0, label: '0%' },
+			{ level: 15, label: '15%' },
+			{ level: 30, label: '30%' },
+			{ level: 50, label: '50%' },
+			{ level: 70, label: '70%' },
+			{ level: 85, label: '85%' },
+			{ level: 100, label: '100%' },
 		]
 
 		for (const gr of self.actionData.groups) {
@@ -392,7 +397,7 @@ export function getPresets(self) {
 				name: `${gr.label} Level`,
 				style: {
 					text: `${gr.label}\\n$(${self.label}:group_${gr.id}_level)%`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
 				},
@@ -408,21 +413,21 @@ export function getPresets(self) {
 
 			// Level buttons (7 increments)
 			for (const gl of groupLevels) {
-				presets[`group_${gr.id}_${gl.pct}`] = {
+				presets[`group_${gr.id}_${gl.level}`] = {
 					type: 'button',
 					category: grCat,
 					name: `Set ${gr.label} to ${gl.label}`,
 					style: {
 						text: `${gr.label}\\n${gl.label}`,
-						size: '14',
+						size: 'auto',
 						color: ColorWhite,
-						bgcolor: gl.pct === 0 ? BgDarkRed : BgDarkBlue,
+						bgcolor: gl.level === 0 ? BgDarkRed : BgDarkBlue,
 					},
 					feedbacks: [
 						{
 							feedbackId: 'groupState',
-							options: { group: gr.id, operation: 'equal', level: gl.pct },
-							style: { bgcolor: gl.pct === 0 ? ColorRed : ColorBlue, color: ColorWhite },
+							options: { group: gr.id, operation: 'equal', level: gl.level },
+							style: { bgcolor: gl.level === 0 ? ColorRed : ColorBlue, color: ColorWhite },
 						},
 					],
 					steps: [
@@ -453,7 +458,7 @@ export function getPresets(self) {
 				name: `Fire ${tr.label}`,
 				style: {
 					text: `FIRE\\n${tr.label}`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorGray,
 				},
@@ -481,7 +486,7 @@ export function getPresets(self) {
 		name: 'Release All Timelines',
 		style: {
 			text: 'RELEASE\\nALL TL',
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: BgDarkRed,
 		},
@@ -505,7 +510,7 @@ export function getPresets(self) {
 		name: 'Release All Scenes',
 		style: {
 			text: 'RELEASE\\nALL SC',
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: BgDarkRed,
 		},
@@ -529,7 +534,7 @@ export function getPresets(self) {
 		name: 'Pause All Timelines',
 		style: {
 			text: 'PAUSE\\nALL TL',
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorGray,
 		},
@@ -553,7 +558,7 @@ export function getPresets(self) {
 		name: 'Resume All Timelines',
 		style: {
 			text: 'RESUME\\nALL TL',
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorGray,
 		},
@@ -579,7 +584,7 @@ export function getPresets(self) {
 		name: 'Project Name',
 		style: {
 			text: `Project\\n$(${self.label}:project_name)`,
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
 		},
@@ -593,7 +598,7 @@ export function getPresets(self) {
 		name: 'Controller Info',
 		style: {
 			text: `$(${self.label}:hardware_type)\\nS/N $(${self.label}:serial_number)`,
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
 		},
@@ -607,7 +612,7 @@ export function getPresets(self) {
 		name: 'Firmware Version',
 		style: {
 			text: `Firmware\\n$(${self.label}:firmware_version)`,
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
 		},
@@ -624,7 +629,7 @@ export function getPresets(self) {
 				name: `Input ${inp.input}`,
 				style: {
 					text: `Input ${inp.input}\\n$(${self.label}:input_${inp.input}_value)`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
 				},
@@ -640,7 +645,7 @@ export function getPresets(self) {
 		name: 'WebSocket Status',
 		style: {
 			text: `WebSocket\\n$(${self.label}:ws_connected)`,
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
 		},
@@ -654,21 +659,7 @@ export function getPresets(self) {
 		name: 'Controller Beacon',
 		style: {
 			text: `Beacon\\n$(${self.label}:beacon)`,
-			size: '14',
-			color: ColorWhite,
-			bgcolor: ColorBlack,
-		},
-		feedbacks: [],
-		steps: [],
-	}
-
-	presets['connection_status'] = {
-		type: 'button',
-		category: 'Status',
-		name: 'Connection Status',
-		style: {
-			text: `Connection\\n$(${self.label}:ws_connected)`,
-			size: '14',
+			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
 		},
@@ -686,7 +677,7 @@ export function getPresets(self) {
 				name: `${dev.name} Status`,
 				style: {
 					text: `${dev.name}\\n$(${self.label}:remote_device_${num}_online)`,
-					size: '14',
+					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,
 				},

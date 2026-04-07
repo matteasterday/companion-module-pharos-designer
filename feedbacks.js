@@ -34,24 +34,11 @@ export function getFeedbacks(self) {
 					required: true,
 				},
 			],
-			callback: async (feedback) => {
-				try {
-					if (!feedback.options.timeline) return false
-					// Use cached state from WebSocket if available
-					const cached = self.state?.timelines?.get(Number(feedback.options.timeline))
-					if (cached) {
-						return feedback.options.state === cached.state
-					}
-					// Fall back to HTTP polling if no cache
-					if (!self.controller) return false
-					const res = await self.controller.getTimelines()
-					const timeline = res.timelines.filter((timeline) => timeline.num == feedback.options.timeline)
-					if (!timeline.length) return false
-					return feedback.options.state === timeline[0].state
-				} catch (e) {
-					self.log('error', `timelineState feedback error: ${e.message}`)
-					return false
-				}
+			callback: (feedback) => {
+				if (!feedback.options.timeline) return false
+				const cached = self.state?.timelines?.get(Number(feedback.options.timeline))
+				if (!cached) return false
+				return feedback.options.state === cached.state
 			},
 		},
 		sceneState: {
@@ -82,24 +69,11 @@ export function getFeedbacks(self) {
 					required: true,
 				},
 			],
-			callback: async (feedback) => {
-				try {
-					if (!feedback.options.state || !feedback.options.scene) return false
-					// Use cached state from WebSocket if available
-					const cached = self.state?.scenes?.get(Number(feedback.options.scene))
-					if (cached) {
-						return feedback.options.state === cached.state
-					}
-					// Fall back to HTTP polling if no cache
-					if (!self.controller) return false
-					const res = await self.controller.getScenes()
-					const scene = res.scenes.filter((scene) => scene.num == feedback.options.scene)
-					if (!scene.length) return false
-					return feedback.options.state === scene[0].state
-				} catch (e) {
-					self.log('error', `sceneState feedback error: ${e.message}`)
-					return false
-				}
+			callback: (feedback) => {
+				if (!feedback.options.state || !feedback.options.scene) return false
+				const cached = self.state?.scenes?.get(Number(feedback.options.scene))
+				if (!cached) return false
+				return feedback.options.state === cached.state
 			},
 		},
 		groupState: {
@@ -138,40 +112,19 @@ export function getFeedbacks(self) {
 					required: true,
 				},
 			],
-			callback: async (feedback) => {
-				try {
-					if (feedback.options.level == null || !feedback.options.operation || !feedback.options.group) return false
-					// Use cached state from WebSocket if available
-					const cached = self.state?.groups?.get(Number(feedback.options.group))
-					if (cached) {
-						switch (feedback.options.operation) {
-							case 'more':
-								return cached.level > feedback.options.level
-							case 'less':
-								return cached.level < feedback.options.level
-							case 'equal':
-								return cached.level === feedback.options.level
-						}
-						return false
-					}
-					// Fall back to HTTP polling if no cache
-					if (!self.controller) return false
-					const res = await self.controller.getGroups()
-					const group = res.groups.filter((group) => group.num == feedback.options.group)
-					if (!group.length) return false
-					switch (feedback.options.operation) {
-						case 'more':
-							return group[0].level > feedback.options.level
-						case 'less':
-							return group[0].level < feedback.options.level
-						case 'equal':
-							return group[0].level === feedback.options.level
-					}
-					return false
-				} catch (e) {
-					self.log('error', `groupState feedback error: ${e.message}`)
-					return false
+			callback: (feedback) => {
+				if (feedback.options.level == null || !feedback.options.operation || !feedback.options.group) return false
+				const cached = self.state?.groups?.get(Number(feedback.options.group))
+				if (!cached) return false
+				switch (feedback.options.operation) {
+					case 'more':
+						return cached.level > feedback.options.level
+					case 'less':
+						return cached.level < feedback.options.level
+					case 'equal':
+						return cached.level === feedback.options.level
 				}
+				return false
 			},
 		},
 		inputState: {

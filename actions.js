@@ -86,9 +86,9 @@ export function getActions(self) {
 				{
 					id: 'level',
 					type: 'number',
-					label: 'Master Intensity  (0-1)',
+					label: 'Master Intensity (0-100)',
 					default: 0,
-					max: 1,
+					max: 100,
 					min: 0,
 				},
 				{

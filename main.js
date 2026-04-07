@@ -26,7 +26,7 @@ class PharosInstance extends InstanceBase {
 			this.pharosWs = null
 		}
 		if (this.controller !== undefined) {
-			this.controller.logout()
+			this.controller.logout().catch(() => {})
 			delete this.controller
 		}
 		this.updateStatus(InstanceStatus.Disconnected)
@@ -40,6 +40,9 @@ class PharosInstance extends InstanceBase {
 		if (this.pharosWs) {
 			this.pharosWs.destroy()
 			this.pharosWs = null
+		}
+		if (this.controller) {
+			this.controller.logout().catch(() => {})
 		}
 		this.config = config
 		this.actionData = {
@@ -61,15 +64,20 @@ class PharosInstance extends InstanceBase {
 		this.pharosConnected = false
 		this.updateActions() // export actions
 		this.updateVariableDefinitions() // export variable definitions
-		this.initController().catch((e) => this.log('error', `Init failed: ${e.message}`))
+		if (this.config.host) {
+			this.updateStatus(InstanceStatus.Connecting)
+		}
+		this._initGeneration = (this._initGeneration || 0) + 1
+		this.initController(this._initGeneration).catch((e) => this.log('error', `Init failed: ${e.message}`))
 	}
 
-	async initController() {
+	async initController(gen) {
 		const self = this
 
 		if (this.config.host) {
 			this.controller = new DesignerClient(this.config.host)
 			const authRes = await this.controller.authenticate(this.config.user, this.config.password)
+			if (gen !== this._initGeneration) return
 			if (authRes.error) this.log('debug', authRes.error)
 			if (!authRes.success) {
 				if (self.lastStatus != InstanceStatus.UnknownError) {
@@ -87,9 +95,13 @@ class PharosInstance extends InstanceBase {
 				}
 				this.pharosConnected = true
 				this.groupsResponse = await this.controller.getGroups()
+				if (gen !== this._initGeneration) return
 				this.scenesResponse = await this.controller.getScenes()
+				if (gen !== this._initGeneration) return
 				this.timelinesResponse = await this.controller.getTimelines()
+				if (gen !== this._initGeneration) return
 				this.triggersResponse = await this.controller.getTriggers()
+				if (gen !== this._initGeneration) return
 				if (
 					this.groupsResponse.success &&
 					this.scenesResponse.success &&
@@ -104,18 +116,26 @@ class PharosInstance extends InstanceBase {
 						}
 					})
 					// mapping the data to select option arrays
-					this.actionData.groups = this.filteredGroups.map(function (group) {
-						return { id: group.num, label: group.name }
-					})
-					this.actionData.scenes = this.scenesResponse.scenes?.map(function (scene) {
-						return { id: scene.num, label: scene.name }
-					})
-					this.actionData.timelines = this.timelinesResponse.timelines?.map(function (timeline) {
-						return { id: timeline.num, label: timeline.name }
-					})
-					this.actionData.triggers = this.triggersResponse.triggers?.map(function (trigger) {
-						return { id: trigger.num, label: trigger.name }
-					})
+					this.actionData.groups = this.filteredGroups.map((group) => ({ id: group.num, label: group.name }))
+					if (!this.actionData.groups.length) this.actionData.groups = [{ id: 0, label: 'No groups found' }]
+
+					this.actionData.scenes =
+						this.scenesResponse.scenes?.map((scene) => ({ id: scene.num, label: scene.name })) || []
+					if (!this.actionData.scenes.length) this.actionData.scenes = [{ id: 0, label: 'No scenes found' }]
+
+					this.actionData.timelines =
+						this.timelinesResponse.timelines?.map((timeline) => ({
+							id: timeline.num,
+							label: timeline.name,
+						})) || []
+					if (!this.actionData.timelines.length) this.actionData.timelines = [{ id: 0, label: 'No timelines found' }]
+
+					this.actionData.triggers =
+						this.triggersResponse.triggers?.map((trigger) => ({
+							id: trigger.num,
+							label: trigger.name,
+						})) || []
+					if (!this.actionData.triggers.length) this.actionData.triggers = [{ id: 0, label: 'No triggers found' }]
 					// Seed state cache from HTTP response
 					for (const tl of this.timelinesResponse.timelines || []) {
 						this.state.timelines.set(tl.num, {
@@ -142,6 +162,7 @@ class PharosInstance extends InstanceBase {
 
 					// Fetch controller info (project, system, inputs)
 					await this._fetchControllerInfo()
+					if (gen !== this._initGeneration) return
 
 					// update actions, feedbacks, variables, and presets after data has been recieved
 					this.updateActions()
@@ -351,10 +372,11 @@ class PharosInstance extends InstanceBase {
 	}
 
 	async _fetchControllerInfo() {
-		const [project, system, input] = await Promise.all([
+		const [project, system, input, remoteDevices] = await Promise.all([
 			this._fetchApi('/api/project'),
 			this._fetchApi('/api/system'),
 			this._fetchApi('/api/input'),
+			this._fetchApi('/api/remote_device'),
 		])
 
 		if (project) {
@@ -362,7 +384,7 @@ class PharosInstance extends InstanceBase {
 				name: project.name || '',
 				author: project.author || '',
 				filename: project.filename || '',
-				unique_id: project.unique_id || '',
+				unique_id: project.uniqueId || '',
 			}
 		}
 
@@ -391,13 +413,26 @@ class PharosInstance extends InstanceBase {
 				})
 			}
 		}
+
+		if (remoteDevices && remoteDevices.remote_devices) {
+			for (const dev of remoteDevices.remote_devices) {
+				this.state.remoteDevices.set(dev.num, {
+					num: dev.num,
+					name: dev.name || '',
+					online: dev.online ?? false,
+					type: dev.type || '',
+				})
+			}
+		}
 	}
 
 	async controlTimeline(action, options) {
 		try {
 			const res = await this.controller.controlTimeline(action, options)
+			if (!res.success) {
+				this.log('warn', `controlTimeline failed: ${res.error || 'unknown error'}`)
+			}
 			this.checkFeedbacks('timelineState')
-			this.log('debug', `controlTimeline success: ${res.success}`)
 		} catch (e) {
 			this.log('error', `controlTimeline failed: ${e.message}`)
 		}
@@ -406,8 +441,10 @@ class PharosInstance extends InstanceBase {
 	async controlGroup(action, options) {
 		try {
 			const res = await this.controller.controlGroup(action, options)
+			if (!res.success) {
+				this.log('warn', `controlGroup failed: ${res.error || 'unknown error'}`)
+			}
 			this.checkFeedbacks('groupState')
-			this.log('debug', `controlGroup success: ${res.success}`)
 		} catch (e) {
 			this.log('error', `controlGroup failed: ${e.message}`)
 		}
@@ -416,8 +453,10 @@ class PharosInstance extends InstanceBase {
 	async controlScene(action, options) {
 		try {
 			const res = await this.controller.controlScene(action, options)
+			if (!res.success) {
+				this.log('warn', `controlScene failed: ${res.error || 'unknown error'}`)
+			}
 			this.checkFeedbacks('sceneState')
-			this.log('debug', `controlScene success: ${res.success}`)
 		} catch (e) {
 			this.log('error', `controlScene failed: ${e.message}`)
 		}
@@ -426,6 +465,9 @@ class PharosInstance extends InstanceBase {
 	async controlTrigger(action, options) {
 		try {
 			const res = await this.controller.controlTrigger(action, options)
+			if (!res.success) {
+				this.log('warn', `controlTrigger failed: ${res.error || 'unknown error'}`)
+			}
 			this.log('debug', `controlTrigger success: ${res.success}`)
 		} catch (e) {
 			this.log('error', `controlTrigger failed: ${e.message}`)
