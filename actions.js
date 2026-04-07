@@ -116,7 +116,7 @@ export function getActions(self) {
 					id: 'info-text-fade',
 					type: 'static-text',
 					label: 'Important',
-					value: 'The fade time set in Companion will always overwrite the default fade time',
+					value: 'The release fade time set here will overwrite the project default release fade',
 				},
 				{
 					id: 'action',

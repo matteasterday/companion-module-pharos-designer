@@ -113,7 +113,7 @@ export function getPresets(self) {
 					{
 						feedbackId: 'timelineState',
 						options: { timeline: tl.id, state: 'released' },
-						style: { bgcolor: ColorGray, color: ColorWhite },
+						style: { bgcolor: BgDarkRed, color: ColorWhite },
 					},
 				],
 				steps: [
@@ -496,7 +496,7 @@ export function getPresets(self) {
 				down: [
 					{
 						actionId: 'controlTimeline',
-						options: { action: 'release', fade: 0 },
+						options: { action: 'release' },
 					},
 				],
 				up: [],
@@ -520,7 +520,7 @@ export function getPresets(self) {
 				down: [
 					{
 						actionId: 'controlScenes',
-						options: { action: 'release', fade: 0 },
+						options: { action: 'release' },
 					},
 				],
 				up: [],
@@ -676,7 +676,7 @@ export function getPresets(self) {
 				category: 'Remote Devices',
 				name: `${dev.name} Status`,
 				style: {
-					text: `${dev.name}\\n$(${self.label}:remote_device_${num}_online)`,
+					text: `$(${self.label}:remote_device_${num}_name)\\n$(${self.label}:remote_device_${num}_online)`,
 					size: 'auto',
 					color: ColorWhite,
 					bgcolor: ColorBlack,

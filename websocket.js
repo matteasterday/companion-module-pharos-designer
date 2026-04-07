@@ -88,7 +88,11 @@ export class PharosWebSocket {
 
 	_send(obj) {
 		if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-			this.ws.send(JSON.stringify(obj))
+			try {
+				this.ws.send(JSON.stringify(obj))
+			} catch (e) {
+				this.instance.log('debug', `WebSocket send failed: ${e.message}`)
+			}
 		}
 	}
 
@@ -248,10 +252,13 @@ export class PharosWebSocket {
 
 	_handleBinaryMessage(data) {
 		// Binary message of all zeros means session timed out
-		const allZeros = Buffer.isBuffer(data) && data.every((byte) => byte === 0)
+		const allZeros = Buffer.isBuffer(data) && data.length > 0 && data.every((byte) => byte === 0)
 		if (allZeros) {
 			this.instance.log('warn', 'WebSocket session timed out (binary all-zeros), reconnecting...')
 			this._close()
+			this.instance.pharosConnected = false
+			this.instance.updateStatus(InstanceStatus.ConnectionFailure, 'Session timed out')
+			this.instance.setVariableValues({ ws_connected: 'false' })
 			this._scheduleReconnect()
 		}
 	}
@@ -281,6 +288,7 @@ export class PharosWebSocket {
 				for (const tl of timelinesRes.timelines || []) {
 					inst.state.timelines.set(tl.num, {
 						num: tl.num,
+						name: tl.name || '',
 						state: tl.state || 'none',
 						onstage: tl.onstage ?? false,
 						position: tl.position ?? 0,
@@ -289,6 +297,7 @@ export class PharosWebSocket {
 				for (const sc of scenesRes.scenes || []) {
 					inst.state.scenes.set(sc.num, {
 						num: sc.num,
+						name: sc.name || '',
 						state: sc.state || 'none',
 						onstage: sc.onstage ?? false,
 					})

@@ -25,7 +25,7 @@ class PharosInstance extends InstanceBase {
 			this.pharosWs.destroy()
 			this.pharosWs = null
 		}
-		if (this.controller !== undefined) {
+		if (this.controller) {
 			this.controller.logout().catch(() => {})
 			delete this.controller
 		}
@@ -42,7 +42,10 @@ class PharosInstance extends InstanceBase {
 			this.pharosWs = null
 		}
 		// Don't logout old controller — it races with the new authenticate()
-		// and can invalidate the new session. The old session times out on its own.
+		// But do stop its internal polling interval to prevent leaked timers
+		if (this.controller && this.controller.poll_interval) {
+			clearInterval(this.controller.poll_interval)
+		}
 		this.controller = null
 		this.config = config
 		this.actionData = {
