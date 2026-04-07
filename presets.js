@@ -387,7 +387,7 @@ export function getPresets(self) {
 		]
 
 		for (const gr of self.actionData.groups) {
-			if (gr.id === 0) continue
+			if (gr.label === 'No groups found') continue
 			const grCat = `Group: ${gr.label}`
 
 			// Status button (first in row)

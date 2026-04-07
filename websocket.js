@@ -68,6 +68,10 @@ export class PharosWebSocket {
 			}
 		})
 
+		this.ws.on('pong', () => {
+			this._pongReceived = true
+		})
+
 		this.ws.on('error', (err) => {
 			this.instance.log('error', `WebSocket error: ${err.message}`)
 		})
@@ -259,7 +263,7 @@ export class PharosWebSocket {
 			if (this.destroyed) return
 
 			if (groupsRes.success && scenesRes.success && timelinesRes.success && triggersRes.success) {
-				inst.filteredGroups = groupsRes.groups?.filter((g) => g.num) || []
+				inst.filteredGroups = groupsRes.groups?.map((g) => ({ ...g, num: g.num ?? 0 })) || []
 				inst.actionData.groups = inst.filteredGroups.map((g) => ({ id: g.num, label: g.name }))
 				if (!inst.actionData.groups.length) inst.actionData.groups = [{ id: 0, label: 'No groups found' }]
 				inst.actionData.scenes = scenesRes.scenes?.map((s) => ({ id: s.num, label: s.name })) || []
@@ -306,12 +310,31 @@ export class PharosWebSocket {
 
 	_startKeepAlive() {
 		this._stopKeepAlive()
+		this._pongReceived = true
 		this.keepAliveInterval = setInterval(() => {
+			// Check if previous ping was answered
+			if (!this._pongReceived) {
+				this.instance.log('warn', 'WebSocket ping timeout — connection dead, reconnecting...')
+				this._close()
+				this.instance.pharosConnected = false
+				this.instance.updateStatus(InstanceStatus.ConnectionFailure, 'Connection lost')
+				this.instance.setVariableValues({ ws_connected: 'false' })
+				if (!this.destroyed) {
+					this._scheduleReconnect()
+				}
+				return
+			}
+			// Send application-level keepalive
 			const msg = {}
 			if (this.token) {
 				msg.token = this.token
 			}
 			this._send(msg)
+			// Send WebSocket-level ping
+			this._pongReceived = false
+			if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+				this.ws.ping()
+			}
 		}, 10000)
 	}
 

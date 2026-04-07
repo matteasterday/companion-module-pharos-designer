@@ -60,7 +60,8 @@ export function getActions(self) {
 			],
 			callback: (event) => {
 				const { action, num, fade, rate, position } = event.options
-				const options = { num, fade }
+				const options = { num }
+				if (fade != null) options.fade = fade
 				if (action === 'set_rate') options.rate = rate
 				if (action === 'set_position') options.position = position
 				self.log('debug', `controlTimeline: ${action} ${JSON.stringify(options)}`)
@@ -101,7 +102,9 @@ export function getActions(self) {
 			],
 			callback: (event) => {
 				const { num, level, fade } = event.options
-				const options = { num, level, fade }
+				// API expects level as 0.0-1.0 float, UI shows 0-100 percentage
+				const options = { num, level: level / 100 }
+				if (fade != null) options.fade = fade
 				self.log('debug', `controlGroup: ${JSON.stringify(options)}`)
 				self.controlGroup('master_intensity', options)
 			},
@@ -137,13 +140,17 @@ export function getActions(self) {
 				{
 					id: 'fade',
 					type: 'number',
-					label: 'Fade (seconds)',
+					label: 'Release fade (seconds)',
 					min: 0,
+					tooltip: 'Fade time for release or the release part of a toggle. If not set, the project default is used.',
 				},
 			],
 			callback: (event) => {
 				const { action, num, fade } = event.options
-				self.controlScene(action, { num, fade })
+				const options = { num }
+				if (fade != null) options.fade = fade
+				self.log('debug', `controlScene: ${action} ${JSON.stringify(options)}`)
+				self.controlScene(action, options)
 			},
 		},
 		controlTriggers: {

@@ -26,7 +26,7 @@ export function getVariables(self) {
 	// Per-group variables
 	if (self.actionData.groups) {
 		for (const gr of self.actionData.groups) {
-			if (gr.id === 0) continue
+			if (gr.label === 'No groups found') continue
 			variables.push({ variableId: `group_${gr.id}_level`, name: `Group ${gr.id} (${gr.label}) Level` })
 			variables.push({ variableId: `group_${gr.id}_name`, name: `Group ${gr.id} (${gr.label}) Name` })
 		}

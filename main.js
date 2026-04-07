@@ -109,12 +109,11 @@ class PharosInstance extends InstanceBase {
 					this.triggersResponse.success
 				) {
 					this.log('debug', 'Storing variables...')
-					// filter groups first because some dont have an id
-					this.filteredGroups = this.groupsResponse.groups.filter(function (group) {
-						if (group.num) {
-							return group
-						}
-					})
+					// Normalize groups — API omits num for "All Fixtures" group (treat as 0)
+					this.filteredGroups = this.groupsResponse.groups.map((group) => ({
+						...group,
+						num: group.num ?? 0,
+					}))
 					// mapping the data to select option arrays
 					this.actionData.groups = this.filteredGroups.map((group) => ({ id: group.num, label: group.name }))
 					if (!this.actionData.groups.length) this.actionData.groups = [{ id: 0, label: 'No groups found' }]
