@@ -342,7 +342,14 @@ class PharosInstance extends InstanceBase {
 			const res = await fetch(`http://${this.config.host}${endpoint}`, {
 				headers: { Authorization: `Bearer ${this.controller.token}` },
 			})
-			if (!res.ok) return null
+			if (res.status === 401) {
+				this.log('warn', `HTTP 401 Unauthorized on ${endpoint} — token may be stale`)
+				return null
+			}
+			if (!res.ok) {
+				this.log('debug', `HTTP ${res.status} on ${endpoint}`)
+				return null
+			}
 			return await res.json()
 		} catch (e) {
 			this.log('debug', `Failed to fetch ${endpoint}: ${e.message}`)
