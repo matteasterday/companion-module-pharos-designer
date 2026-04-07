@@ -372,13 +372,13 @@ export function getPresets(self) {
 
 	if (self.actionData.groups) {
 		const groupLevels = [
-			{ pct: 0, level: 0, label: '0%' },
-			{ pct: 15, level: 0.15, label: '15%' },
-			{ pct: 30, level: 0.3, label: '30%' },
-			{ pct: 50, level: 0.5, label: '50%' },
-			{ pct: 70, level: 0.7, label: '70%' },
-			{ pct: 85, level: 0.85, label: '85%' },
-			{ pct: 100, level: 1, label: '100%' },
+			{ pct: 0, label: '0%' },
+			{ pct: 15, label: '15%' },
+			{ pct: 30, label: '30%' },
+			{ pct: 50, label: '50%' },
+			{ pct: 70, label: '70%' },
+			{ pct: 85, label: '85%' },
+			{ pct: 100, label: '100%' },
 		]
 
 		for (const gr of self.actionData.groups) {
@@ -430,7 +430,7 @@ export function getPresets(self) {
 							down: [
 								{
 									actionId: 'controlGroups',
-									options: { num: gr.id, level: gl.level, fade: 0 },
+									options: { num: gr.id, level: gl.pct, fade: 0 },
 								},
 							],
 							up: [],
