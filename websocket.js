@@ -338,7 +338,12 @@ export class PharosWebSocket {
 				}
 				return
 			}
-			// Send application-level keepalive
+			// Send application-level keepalive — always use the controller's latest token
+			// since the HTTP polling refreshes it before the 4.5-minute TTL expires
+			const currentToken = this.instance.controller?.token || this.token
+			if (currentToken) {
+				this.token = currentToken
+			}
 			const msg = {}
 			if (this.token) {
 				msg.token = this.token
