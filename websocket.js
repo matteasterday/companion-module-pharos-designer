@@ -196,7 +196,9 @@ export class PharosWebSocket {
 		const values = {}
 		// Handle both array format and individual device format
 		const devices = data.remote_devices || (data.num != null ? [data] : [])
+		let sawNewDevice = false
 		for (const dev of devices) {
+			if (!this.instance.state.remoteDevices.has(dev.num)) sawNewDevice = true
 			this.instance.state.remoteDevices.set(dev.num, {
 				num: dev.num,
 				name: dev.name || dev.type || '',
@@ -210,7 +212,9 @@ export class PharosWebSocket {
 		if (devices.length > 0) {
 			this.instance.log('debug', `Remote devices updated: ${devices.length} devices`)
 			this.instance.setVariableValues(values)
-			this.instance.updateVariableDefinitions()
+			// Only rebuild variable definitions when we discover a new device —
+			// state-change broadcasts don't change the variable set.
+			if (sawNewDevice) this.instance.updateVariableDefinitions()
 		}
 	}
 

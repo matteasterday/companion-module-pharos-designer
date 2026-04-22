@@ -20,6 +20,9 @@ class PharosInstance extends InstanceBase {
 
 	// When module gets deleted
 	async destroy() {
+		// Invalidate any in-flight initController so it bails before
+		// creating a new WebSocket / writing to the now-destroyed instance.
+		this._initGeneration = (this._initGeneration || 0) + 1
 		this._stopInputPolling()
 		if (this.pharosWs) {
 			this.pharosWs.destroy()
@@ -375,15 +378,20 @@ class PharosInstance extends InstanceBase {
 	}
 
 	async _fetchApi(endpoint) {
+		const controller = new AbortController()
+		const timeout = setTimeout(() => controller.abort(), 8000)
 		try {
 			const res = await fetch(`http://${this.config.host}${endpoint}`, {
 				headers: { Authorization: `Bearer ${this.controller.token}` },
+				signal: controller.signal,
 			})
 			if (!res.ok) return null
 			return await res.json()
 		} catch (e) {
 			this.log('debug', `Failed to fetch ${endpoint}: ${e.message}`)
 			return null
+		} finally {
+			clearTimeout(timeout)
 		}
 	}
 
