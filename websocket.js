@@ -124,48 +124,61 @@ export class PharosWebSocket {
 
 	_handleTimelineBroadcast(data) {
 		if (!data || data.num == null) return
+		const prev = this.instance.state.timelines.get(data.num)
+		const name = data.name ?? prev?.name ?? ''
 		this.instance.state.timelines.set(data.num, {
 			num: data.num,
+			name,
 			state: data.state || 'none',
 			onstage: data.onstage ?? false,
 			position: data.position ?? 0,
 		})
 		this.instance.log('debug', `Timeline ${data.num} -> ${data.state}`)
-		this.instance.setVariableValues({
+		const values = {
 			[`timeline_${data.num}_state`]: formatState(data.state || 'none'),
 			[`timeline_${data.num}_onstage`]: String(data.onstage ?? false),
 			[`timeline_${data.num}_position`]: data.position ?? 0,
-		})
+		}
+		if (data.name != null) values[`timeline_${data.num}_name`] = data.name
+		this.instance.setVariableValues(values)
 		this.instance.checkFeedbacks('timelineState')
 	}
 
 	_handleSceneBroadcast(data) {
 		if (!data || data.num == null) return
+		const prev = this.instance.state.scenes.get(data.num)
+		const name = data.name ?? prev?.name ?? ''
 		this.instance.state.scenes.set(data.num, {
 			num: data.num,
+			name,
 			state: data.state || 'none',
 			onstage: data.onstage ?? false,
 		})
 		this.instance.log('debug', `Scene ${data.num} -> ${data.state}`)
-		this.instance.setVariableValues({
+		const values = {
 			[`scene_${data.num}_state`]: formatState(data.state || 'none'),
 			[`scene_${data.num}_onstage`]: String(data.onstage ?? false),
-		})
+		}
+		if (data.name != null) values[`scene_${data.num}_name`] = data.name
+		this.instance.setVariableValues(values)
 		this.instance.checkFeedbacks('sceneState')
 	}
 
 	_handleGroupBroadcast(data) {
 		if (!data || data.num == null) return
+		const prev = this.instance.state.groups.get(data.num)
+		const name = data.name ?? prev?.name ?? ''
 		this.instance.state.groups.set(data.num, {
 			num: data.num,
-			name: data.name || '',
+			name,
 			level: data.level ?? 0,
 		})
-		this.instance.log('debug', `Group ${data.num} (${data.name}) level -> ${data.level}`)
-		this.instance.setVariableValues({
+		this.instance.log('debug', `Group ${data.num} (${name}) level -> ${data.level}`)
+		const values = {
 			[`group_${data.num}_level`]: data.level ?? 0,
-			[`group_${data.num}_name`]: data.name || '',
-		})
+		}
+		if (data.name != null) values[`group_${data.num}_name`] = data.name
+		this.instance.setVariableValues(values)
 		this.instance.checkFeedbacks('groupState')
 	}
 

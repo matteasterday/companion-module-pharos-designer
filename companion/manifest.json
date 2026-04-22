@@ -3,7 +3,7 @@
 	"name": "pharos-designer",
 	"shortname": "designer",
 	"description": "Control Pharos Designer controllers via HTTP and WebSocket APIs with real-time feedback",
-	"version": "1.2.0",
+	"version": "1.3.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-pharos-designer.git",
 	"bugs": "https://github.com/bitfocus/companion-module-pharos-designer/issues",
