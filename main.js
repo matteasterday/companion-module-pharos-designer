@@ -361,9 +361,13 @@ class PharosInstance extends InstanceBase {
 
 	_startInputPolling() {
 		this._stopInputPolling()
-		let interval = this.config.inputPollInterval || 0
-		if (interval > 0 && interval < 5) interval = 5
-		if (interval <= 0) return
+		const requested = this.config.inputPollInterval || 0
+		if (requested <= 0) return
+		let interval = requested
+		if (interval < 5) {
+			interval = 5
+			this.log('warn', `Input poll interval ${requested}s is below the 5s minimum — using 5s`)
+		}
 		this.log('debug', `Input polling every ${interval}s`)
 		this.inputPollTimer = setInterval(() => {
 			this.refreshInputs()

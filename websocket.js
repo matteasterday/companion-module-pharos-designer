@@ -34,6 +34,7 @@ export class PharosWebSocket {
 			this.instance.log('info', 'WebSocket connected')
 			this.instance.pharosConnected = true
 			this.instance.updateStatus(InstanceStatus.Ok)
+			this.instance.lastStatus = InstanceStatus.Ok
 			this.reconnectDelay = 1000
 			this._subscribe('timeline')
 			this._subscribe('scene')
@@ -60,6 +61,7 @@ export class PharosWebSocket {
 			this.instance.pharosConnected = false
 			if (!this.destroyed) {
 				this.instance.updateStatus(InstanceStatus.ConnectionFailure, 'WebSocket disconnected')
+				this.instance.lastStatus = InstanceStatus.ConnectionFailure
 			}
 			this._stopKeepAlive()
 			this.instance.setVariableValues({ ws_connected: 'false' })
